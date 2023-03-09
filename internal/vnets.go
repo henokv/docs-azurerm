@@ -93,6 +93,8 @@ func (vnet VNETWrapper) GenerateMarkdown() string {
 
 func (vnet VNETWrapper) WriteMarkdown() error {
 	markdown := vnet.GenerateMarkdown()
+	a := vnet.Properties.VirtualNetworkPeerings
+	fmt.Sprintf("%v", a)
 	err := WriteToFile(markdown, fmt.Sprintf("docs/%s/%s/%s.md", *vnet.Subscription.DisplayName, vnet.ResourceGroup, *vnet.Name))
 	return err
 }
