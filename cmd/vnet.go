@@ -47,14 +47,4 @@ func vnetCMDRunE(cmd *cobra.Command, args []string) error {
 
 func init() {
 	rootCmd.AddCommand(vnetCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// vnetCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// vnetCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
