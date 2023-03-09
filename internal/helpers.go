@@ -40,7 +40,7 @@ func GenerateMarkdown(subs []*SubscriptionWrapper) string {
 	markdown += fmt.Sprintf("# Subscriptions  \n")
 	for _, sub := range subs {
 		if len(sub.vnets) > 0 {
-			markdown += fmt.Sprintf("- [%s](%s/Readme.md).  \n", *sub.DisplayName, *sub.SubscriptionID)
+			markdown += fmt.Sprintf("- [%s](%s/Readme.md).  \n", *sub.DisplayName, strings.ReplaceAll(*sub.DisplayName, " ", "%20"))
 		}
 	}
 	return markdown
