@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/subscription/armsubscription"
+	"github.com/spf13/viper"
+	"golang.org/x/exp/slices"
+	"os"
 )
 
-func (sub SubscriptionWrapper) GenerateMarkdown() string {
+func (sub SubscriptionWrapper) generateMarkdown() string {
 	var markdown string
 	markdown += fmt.Sprintf("# %s  \n", *sub.DisplayName)
 	markdown += fmt.Sprintf("#### ID: %s  \n", *sub.SubscriptionID)
@@ -20,7 +23,7 @@ func (sub SubscriptionWrapper) GenerateMarkdown() string {
 
 func (sub SubscriptionWrapper) WriteMarkdown() error {
 	if len(sub.vnets) > 0 {
-		markdown := sub.GenerateMarkdown()
+		markdown := sub.generateMarkdown()
 		err := WriteToFile(markdown, fmt.Sprintf("docs/%s/Readme.md", *sub.DisplayName))
 		return err
 	}
@@ -36,15 +39,34 @@ func NewSubscriptionWrapper(sub armsubscription.Subscription) SubscriptionWrappe
 	return SubscriptionWrapper{sub, []*VNETWrapper{}}
 }
 
-func GetAllSubscriptionsAsString() (subscriptions []string, err error) {
-	subscriptionsResources, err := GetAllSubscriptions()
-	if err != nil {
-		return nil, err
+//func GetAllSubscriptionsAsString() (subscriptions []string, err error) {
+//	subscriptionsResources, err := GetAllSubscriptions()
+//	if err != nil {
+//		return nil, err
+//	}
+//	for _, subscription := range subscriptionsResources {
+//		subscriptions = append(subscriptions, *subscription.SubscriptionID)
+//	}
+//	return subscriptions, nil
+//}
+
+func subscriptionNeeded(subscription *armsubscription.Subscription) bool {
+	value := *subscription.SubscriptionID
+	if viper.GetString("subscriptions.key") == "name" {
+		value = *subscription.DisplayName
 	}
-	for _, subscription := range subscriptionsResources {
-		subscriptions = append(subscriptions, *subscription.SubscriptionID)
+	include := viper.GetStringSlice("subscriptions.include")
+	if len(include) > 0 {
+		return slices.Contains(include, value)
 	}
-	return subscriptions, nil
+	if slices.Contains(viper.GetStringSlice("subscriptions.exclude"), value) {
+		return false
+	}
+	return true
+}
+
+func CleanDocsDir() {
+	os.RemoveAll("docs")
 }
 
 func GetAllSubscriptions() (subscriptions []*SubscriptionWrapper, err error) {
@@ -63,7 +85,7 @@ func GetAllSubscriptions() (subscriptions []*SubscriptionWrapper, err error) {
 			return subscriptions, err
 		}
 		for _, subscription := range subList.ListResult.Value {
-			if true {
+			if subscriptionNeeded(subscription) {
 				wrappedSub := NewSubscriptionWrapper(*subscription)
 				subscriptions = append(subscriptions, &wrappedSub)
 			}

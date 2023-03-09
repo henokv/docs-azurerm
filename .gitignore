@@ -2,3 +2,4 @@
 go-diagrams/
 diagram.png
 *.md
+config.yaml

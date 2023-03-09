@@ -1,0 +1,4 @@
+subscriptions:
+ key: name
+ include:
+ - "Test SUB Name"

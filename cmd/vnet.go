@@ -22,6 +22,7 @@ func RootCmdRunE(cmd *cobra.Command, args []string) error {
 	//	"dcbcbcdb-18e3-4603-aed1-604ae0d2fe19",
 	//	"118716cf-bdd8-4635-b567-075d0923d8f5",
 	//}
+	internal.CleanDocsDir()
 	subs, err := internal.GetAllSubscriptions()
 	if err != nil {
 		return err
