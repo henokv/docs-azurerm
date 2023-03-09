@@ -46,6 +46,8 @@ func (vnet *VNETWrapper) generateIPSpaces() {
 				//Subnet is part of this IPspace
 			}
 		}
+		a := ipSpace.GetFreeIPs()
+		fmt.Sprintf("%v", a)
 		vnet.IPSpaces = append(vnet.IPSpaces, ipSpace)
 	}
 
