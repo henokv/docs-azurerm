@@ -52,6 +52,13 @@ func (vnet *VNETWrapper) generateIPSpaces() {
 
 }
 
+func (vnet *VNETWrapper) getFreeIPSPace() (freeSpaces []iplib.Net4) {
+	for _, space := range vnet.IPSpaces {
+		freeSpaces = append(freeSpaces, space.freeSpace...)
+	}
+	return freeSpaces
+}
+
 func (vnet VNETWrapper) GenerateMarkdown() string {
 	var markdown string
 	markdown += fmt.Sprintf("# %s  \n", *vnet.Name)
@@ -71,6 +78,15 @@ func (vnet VNETWrapper) GenerateMarkdown() string {
 			*subnet.Name,
 			getRouteTableName(subnet),
 			getNsgName(subnet))
+	}
+	markdown += fmt.Sprintf("### Free Space  \n")
+	markdown += fmt.Sprintf("| Prefix | Size (Usable) |\n")
+	markdown += fmt.Sprintf("| --- | --- |\n")
+	for _, space := range vnet.getFreeIPSPace() {
+		usableIPs := iplib.DeltaIP4(space.NetworkAddress(), iplib.IncrementIPBy(space.BroadcastAddress(), 1)) - 5
+		markdown += fmt.Sprintf("| %s | %d |\n",
+			space.String(), usableIPs,
+		)
 	}
 	return markdown
 }
