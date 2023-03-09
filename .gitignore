@@ -3,3 +3,5 @@ go-diagrams/
 diagram.png
 *.md
 config.yaml
+docs-azurerm*
+*.exe

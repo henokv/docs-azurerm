@@ -5,24 +5,20 @@ package cmd
 
 import (
 	"github.com/henokv/docs-azurerm/internal"
-
 	"github.com/spf13/cobra"
+	"log"
 )
 
 // vnetCmd represents the vnet command
 var vnetCmd = &cobra.Command{
 	Use:     "vnet",
 	Short:   "This command will generate the docs for the networking components in azure",
-	RunE:    RootCmdRunE,
+	RunE:    vnetCMDRunE,
 	Version: rootCmd.Version,
 }
 
-func RootCmdRunE(cmd *cobra.Command, args []string) error {
-	//subs := []string{
-	//	"32595ab2-1344-49c6-af39-cd6fe41334b3",
-	//	"dcbcbcdb-18e3-4603-aed1-604ae0d2fe19",
-	//	"118716cf-bdd8-4635-b567-075d0923d8f5",
-	//}
+func vnetCMDRunE(cmd *cobra.Command, args []string) error {
+	log.Println("Generating docs ...")
 	internal.CleanDocsDir()
 	subs, err := internal.GetAllSubscriptions()
 	if err != nil {
@@ -45,6 +41,7 @@ func RootCmdRunE(cmd *cobra.Command, args []string) error {
 			return err
 		}
 	}
+	log.Println("Docs are generated")
 	return nil
 }
 

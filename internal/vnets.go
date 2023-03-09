@@ -11,26 +11,52 @@ import (
 )
 
 type VNETWrapper struct {
-	armnetwork.VirtualNetwork
+	*armnetwork.VirtualNetwork
 	ResourceGroup string
 	Subscription  SubscriptionWrapper
+	IPSpaces      []*IPSpace
 }
 
-func NewVNETWrapper(vnet armnetwork.VirtualNetwork, subscriptionWrapper SubscriptionWrapper) VNETWrapper {
+func NewVNETWrapper(vnet *armnetwork.VirtualNetwork, subscriptionWrapper SubscriptionWrapper) VNETWrapper {
 	split := strings.Split(*vnet.ID, "/")
 	rg := split[4]
-	wrapper := VNETWrapper{vnet, rg, subscriptionWrapper}
+	wrapper := VNETWrapper{vnet, rg, subscriptionWrapper, []*IPSpace{}}
 	sort.Slice(wrapper.Properties.AddressSpace.AddressPrefixes, func(i, j int) bool {
 		a := wrapper.Properties.AddressSpace.AddressPrefixes[i]
 		b := wrapper.Properties.AddressSpace.AddressPrefixes[j]
 		return iplib.CompareNets(iplib.Net4FromStr(*a), iplib.Net4FromStr(*b)) == -1
 	})
+
 	sort.Slice(wrapper.Properties.Subnets, func(i, j int) bool {
 		a := wrapper.Properties.Subnets[i].Properties.AddressPrefix
 		b := wrapper.Properties.Subnets[j].Properties.AddressPrefix
 		return iplib.CompareNets(iplib.Net4FromStr(*a), iplib.Net4FromStr(*b)) == -1
 	})
+	wrapper.generateIPSpaces()
 	return wrapper
+}
+
+func (vnet *VNETWrapper) generateIPSpaces() {
+	vnet.IPSpaces = []*IPSpace{}
+	for _, addressSpace := range vnet.Properties.AddressSpace.AddressPrefixes {
+		ipSpace := NewIPSPace(vnet, *addressSpace)
+
+		for _, subnet := range vnet.Properties.Subnets {
+			if ipSpace.AddSubnet(subnet) {
+				//Subnet is part of this IPspace
+			}
+		}
+		ipSpace.generateFreeIPs()
+		vnet.IPSpaces = append(vnet.IPSpaces, ipSpace)
+	}
+
+}
+
+func (vnet *VNETWrapper) getFreeIPSPace() (freeSpaces []iplib.Net4) {
+	for _, space := range vnet.IPSpaces {
+		freeSpaces = append(freeSpaces, space.freeSpace...)
+	}
+	return freeSpaces
 }
 
 func (vnet VNETWrapper) GenerateMarkdown() string {
@@ -44,14 +70,23 @@ func (vnet VNETWrapper) GenerateMarkdown() string {
 		markdown += fmt.Sprintf("- %s  \n", *prefix)
 	}
 	markdown += fmt.Sprintf("### Subnets  \n")
-	markdown += fmt.Sprintf("| Name | Prefix | Route Table | NSG |\n")
+	markdown += fmt.Sprintf("| Prefix | Name | Route Table | NSG |\n")
 	markdown += fmt.Sprintf("| --- | --- | --- | --- |\n")
 	for _, subnet := range vnet.Properties.Subnets {
 		markdown += fmt.Sprintf("| %s | %s | %s | %s |\n",
-			*subnet.Name,
 			*subnet.Properties.AddressPrefix,
+			*subnet.Name,
 			getRouteTableName(subnet),
 			getNsgName(subnet))
+	}
+	markdown += fmt.Sprintf("### Free Space  \n")
+	markdown += fmt.Sprintf("| Prefix | Size (Usable) |\n")
+	markdown += fmt.Sprintf("| --- | --- |\n")
+	for _, space := range vnet.getFreeIPSPace() {
+		usableIPs := iplib.DeltaIP4(space.NetworkAddress(), iplib.IncrementIPBy(space.BroadcastAddress(), 1)) - 5
+		markdown += fmt.Sprintf("| %s | %d |\n",
+			space.String(), usableIPs,
+		)
 	}
 	return markdown
 }
@@ -89,7 +124,7 @@ func getWrappedVNETsInSubscription(subscription *SubscriptionWrapper) (vnets []*
 			return vnets, err
 		}
 		for _, vnet := range vnetList.VirtualNetworkListResult.Value {
-			wrappedVNET := NewVNETWrapper(*vnet, *subscription)
+			wrappedVNET := NewVNETWrapper(vnet, *subscription)
 			vnets = append(vnets, &wrappedVNET)
 			subscription.vnets = append(subscription.vnets, &wrappedVNET)
 		}
@@ -101,7 +136,8 @@ func getRouteTableName(subnet *armnetwork.Subnet) string {
 	if subnet.Properties.RouteTable == nil {
 		return "-"
 	} else {
-		return *subnet.Properties.RouteTable.Name
+		idSplit := strings.Split(*subnet.Properties.RouteTable.ID, "/")
+		return idSplit[len(idSplit)-1]
 	}
 }
 
@@ -109,7 +145,8 @@ func getNsgName(subnet *armnetwork.Subnet) string {
 	if subnet.Properties.NetworkSecurityGroup == nil {
 		return "-"
 	} else {
-		return *subnet.Properties.NetworkSecurityGroup.Name
+		idSplit := strings.Split(*subnet.Properties.NetworkSecurityGroup.ID, "/")
+		return idSplit[len(idSplit)-1]
 	}
 }
 

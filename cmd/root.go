@@ -15,7 +15,7 @@ var rootCmd = &cobra.Command{
 	Use:     "docs-azurerm",
 	Short:   "A tool to generate documentation for azure",
 	Long:    `This tool will generate docs for azure based on the current resources deployed`,
-	Version: "0.0.1",
+	Version: "0.2.0",
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	//RunE: RootCmdRunE,
