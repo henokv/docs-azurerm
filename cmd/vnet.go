@@ -11,9 +11,10 @@ import (
 
 // vnetCmd represents the vnet command
 var vnetCmd = &cobra.Command{
-	Use:   "vnet",
-	Short: "This command will generate the docs for the networking components in azure",
-	RunE:  RootCmdRunE,
+	Use:     "vnet",
+	Short:   "This command will generate the docs for the networking components in azure",
+	RunE:    RootCmdRunE,
+	Version: rootCmd.Version,
 }
 
 func RootCmdRunE(cmd *cobra.Command, args []string) error {
