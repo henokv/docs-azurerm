@@ -62,12 +62,12 @@ func (vnet VNETWrapper) GenerateMarkdown() string {
 		markdown += fmt.Sprintf("- %s  \n", *prefix)
 	}
 	markdown += fmt.Sprintf("### Subnets  \n")
-	markdown += fmt.Sprintf("| Name | Prefix | Route Table | NSG |\n")
+	markdown += fmt.Sprintf("| Prefix | Name | Route Table | NSG |\n")
 	markdown += fmt.Sprintf("| --- | --- | --- | --- |\n")
 	for _, subnet := range vnet.Properties.Subnets {
 		markdown += fmt.Sprintf("| %s | %s | %s | %s |\n",
-			*subnet.Name,
 			*subnet.Properties.AddressPrefix,
+			*subnet.Name,
 			getRouteTableName(subnet),
 			getNsgName(subnet))
 	}
@@ -119,7 +119,8 @@ func getRouteTableName(subnet *armnetwork.Subnet) string {
 	if subnet.Properties.RouteTable == nil {
 		return "-"
 	} else {
-		return *subnet.Properties.RouteTable.Name
+		idSplit := strings.Split(*subnet.Properties.RouteTable.ID, "/")
+		return idSplit[len(idSplit)-1]
 	}
 }
 
@@ -127,7 +128,8 @@ func getNsgName(subnet *armnetwork.Subnet) string {
 	if subnet.Properties.NetworkSecurityGroup == nil {
 		return "-"
 	} else {
-		return *subnet.Properties.NetworkSecurityGroup.Name
+		idSplit := strings.Split(*subnet.Properties.NetworkSecurityGroup.ID, "/")
+		return idSplit[len(idSplit)-1]
 	}
 }
 
