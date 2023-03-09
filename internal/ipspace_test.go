@@ -19,7 +19,8 @@ func TestIPSpace_GetFreeIPs(t *testing.T) {
 	for _, subnet := range subnets {
 		ipspace.AddSubnet(subnet)
 	}
-	a := ipspace.GetFreeIPs()
+	ipspace.generateFreeIPs()
+	a := ipspace.freeSpace
 	if len(a) != 9 {
 		t.Fatalf("9 IPs expected but only got %d", len(a))
 	}
