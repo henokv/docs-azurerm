@@ -13,7 +13,6 @@ builds:
 archives:
   - format: tar.gz
     # this name template makes the OS and Arch compatible with the results of uname.
-<<<<<<< HEAD
 #    name_template: >-
 #      {{ .ProjectName }}_
 #      {{- title .Os }}_
@@ -21,15 +20,6 @@ archives:
 #      {{- else if eq .Arch "386" }}i386
 #      {{- else }}{{ .Arch }}{{ end }}
 #      {{- if .Arm }}v{{ .Arm }}{{ end }}
-=======
-    name_template: >-
-      {{ .ProjectName }}_
-      {{- title .Os }}_
-      {{- if eq .Arch "amd64" }}x86_64
-      {{- else if eq .Arch "386" }}i386
-      {{- else }}{{ .Arch }}{{ end }}
-      {{- if .Arm }}v{{ .Arm }}{{ end }}
->>>>>>> 64f0c3a06480d6d0ff4a3fcc2bce0ba5ba6fe0b7
     # use zip for windows archives
     format_overrides:
     - goos: windows
