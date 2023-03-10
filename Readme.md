@@ -5,4 +5,4 @@
 This is a tool meant to document resources in the azure cloud
 
 ### Supported resources:
-- Virtal Networks
+- Virtual Networks
