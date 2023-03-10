@@ -1,7 +1,7 @@
 .idea/
 go-diagrams/
 diagram.png
-docs/*.md
+docs/
 config.yaml
 docs-azurerm*
 *.exe
