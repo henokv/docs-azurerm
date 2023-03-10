@@ -10,7 +10,9 @@ import (
 	"os"
 )
 
-func (sub SubscriptionWrapper) generateMarkdown() string {
+var subscriptionList []*SubscriptionWrapper
+
+func (sub *SubscriptionWrapper) generateMarkdown() string {
 	var markdown string
 	markdown += fmt.Sprintf("# %s  \n", *sub.DisplayName)
 	markdown += fmt.Sprintf("#### ID: %s  \n", *sub.SubscriptionID)
@@ -21,7 +23,7 @@ func (sub SubscriptionWrapper) generateMarkdown() string {
 	return markdown
 }
 
-func (sub SubscriptionWrapper) WriteMarkdown() error {
+func (sub *SubscriptionWrapper) WriteMarkdown() error {
 	if len(sub.vnets) > 0 {
 		markdown := sub.generateMarkdown()
 		err := WriteToFile(markdown, fmt.Sprintf("docs/%s/Readme.md", *sub.DisplayName))
@@ -37,6 +39,22 @@ type SubscriptionWrapper struct {
 
 func NewSubscriptionWrapper(sub armsubscription.Subscription) SubscriptionWrapper {
 	return SubscriptionWrapper{sub, []*VNETWrapper{}}
+}
+
+// GetCachedSubscriptionNameByID
+// Function to check against local subscription store if
+// subscriptionId : the resource id of the subscription
+// name : the display name
+// found : if the subscription can be found in cache
+func GetCachedSubscriptionNameByID(subscriptionId string) (name string, found bool) {
+	for _, subscription := range subscriptionList {
+		if *subscription.SubscriptionID == subscriptionId {
+			name = *subscription.DisplayName
+			found = true
+			break
+		}
+	}
+	return name, found
 }
 
 //func GetAllSubscriptionsAsString() (subscriptions []string, err error) {
@@ -65,10 +83,12 @@ func subscriptionNeeded(subscription *armsubscription.Subscription) bool {
 	return true
 }
 
+// Cleans the docs directory
 func CleanDocsDir() {
 	os.RemoveAll("docs")
 }
 
+// GetAllSubscriptions returns all the subscriptions on which the authenticated user has permissions
 func GetAllSubscriptions() (subscriptions []*SubscriptionWrapper, err error) {
 	cred, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
@@ -91,5 +111,6 @@ func GetAllSubscriptions() (subscriptions []*SubscriptionWrapper, err error) {
 			}
 		}
 	}
+	subscriptionList = subscriptions
 	return subscriptions, nil
 }

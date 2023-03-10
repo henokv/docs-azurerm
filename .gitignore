@@ -5,3 +5,4 @@ diagram.png
 config.yaml
 docs-azurerm*
 *.exe
+dist/
