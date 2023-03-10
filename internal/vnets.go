@@ -88,6 +88,26 @@ func (vnet VNETWrapper) GenerateMarkdown() string {
 			space.String(), usableIPs,
 		)
 	}
+	markdown += fmt.Sprintf("### Peerings  \n")
+	markdown += fmt.Sprintf("| VNET | Spaces |\n")
+	markdown += fmt.Sprintf("| --- | --- |\n")
+	for _, peering := range vnet.Properties.VirtualNetworkPeerings {
+		nameParts := strings.Split(*peering.Properties.RemoteVirtualNetwork.ID, "/")
+		subscriptionId := nameParts[2]
+		remoteRangesPtr := peering.Properties.RemoteVirtualNetworkAddressSpace.AddressPrefixes
+		var remoteRanges []string
+		for _, rrp := range remoteRangesPtr {
+			remoteRanges = append(remoteRanges, *rrp)
+		}
+		vnetNameMarkdown := nameParts[8]
+		for _, subscription := range subscriptionList {
+			if *subscription.SubscriptionID == subscriptionId {
+				vnetNameMarkdown = strings.ReplaceAll(fmt.Sprintf("[%s](./../../%s/%s/%s.md)", nameParts[8], *subscription.DisplayName, nameParts[4], nameParts[8]), " ", "%20")
+				break
+			}
+		}
+		markdown += fmt.Sprintf("| %s | %v |\n", vnetNameMarkdown, remoteRanges)
+	}
 	return markdown
 }
 
@@ -149,36 +169,3 @@ func getNsgName(subnet *armnetwork.Subnet) string {
 		return idSplit[len(idSplit)-1]
 	}
 }
-
-//func GetVNETsInSubscriptions(subscriptions []string) (vnets []*armnetwork.VirtualNetwork, err error) {
-//	for _, subscription := range subscriptions {
-//		vnetsInSub, err := getVNETsInSubscription(subscription)
-//		if err != nil {
-//			return vnets, err
-//		}
-//		vnets = append(vnets, vnetsInSub...)
-//	}
-//	return vnets, nil
-//}
-
-//func getVNETsInSubscription(subscription string) (vnets []*armnetwork.VirtualNetwork, err error) {
-//	cred, err := azidentity.NewDefaultAzureCredential(nil)
-//	if err != nil {
-//		return vnets, err
-//	}
-//	client, err := armnetwork.NewVirtualNetworksClient(subscription, cred, nil)
-//	if err != nil {
-//		return vnets, err
-//	}
-//	pager := client.NewListAllPager(nil)
-//	for pager.More() {
-//		vnetList, err := pager.NextPage(context.Background())
-//		if err != nil {
-//			return vnets, err
-//		}
-//		for _, vnet := range vnetList.VirtualNetworkListResult.Value {
-//			vnets = append(vnets, vnet)
-//		}
-//	}
-//	return vnets, nil
-//}

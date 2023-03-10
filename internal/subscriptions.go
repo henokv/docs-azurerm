@@ -10,6 +10,8 @@ import (
 	"os"
 )
 
+var subscriptionList []*SubscriptionWrapper
+
 func (sub SubscriptionWrapper) generateMarkdown() string {
 	var markdown string
 	markdown += fmt.Sprintf("# %s  \n", *sub.DisplayName)
@@ -65,10 +67,12 @@ func subscriptionNeeded(subscription *armsubscription.Subscription) bool {
 	return true
 }
 
+// Cleans the docs directory
 func CleanDocsDir() {
 	os.RemoveAll("docs")
 }
 
+// GetAllSubscriptions returns all the subscriptions on which the authenticated user has permissions
 func GetAllSubscriptions() (subscriptions []*SubscriptionWrapper, err error) {
 	cred, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
@@ -91,5 +95,6 @@ func GetAllSubscriptions() (subscriptions []*SubscriptionWrapper, err error) {
 			}
 		}
 	}
+	subscriptionList = subscriptions
 	return subscriptions, nil
 }
