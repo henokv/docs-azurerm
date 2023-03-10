@@ -59,38 +59,27 @@ func (vnet *VNETWrapper) getFreeIPSPace() (freeSpaces []iplib.Net4) {
 	return freeSpaces
 }
 
-func (vnet VNETWrapper) GenerateMarkdown() string {
+func (vnet *VNETWrapper) MarkdownGenerate() string {
 	var markdown string
-	markdown += fmt.Sprintf("# %s  \n", *vnet.Name)
-	markdown += fmt.Sprintf("#### Location: %s  \n", *vnet.Location)
-	markdown += fmt.Sprintf("#### RG: %s  \n", vnet.ResourceGroup)
-	markdown += fmt.Sprintf("#### Subscription: [%s](../Readme.md)  \n", *vnet.Subscription.DisplayName)
-	markdown += fmt.Sprintf("#### Ranges  \n")
-	for _, prefix := range vnet.Properties.AddressSpace.AddressPrefixes {
-		markdown += fmt.Sprintf("- %s  \n", *prefix)
-	}
-	markdown += fmt.Sprintf("### Subnets  \n")
-	markdown += fmt.Sprintf("| Prefix | Name | Route Table | NSG |\n")
-	markdown += fmt.Sprintf("| --- | --- | --- | --- |\n")
+	markdown += MarkdownGenerateTitle(*vnet.Name, 1)
+	markdown += MarkdownGenerateTitle(*vnet.Location, 4)
+	markdown += MarkdownGenerateTitle(vnet.ResourceGroup, 4)
+	markdown += MarkdownGenerateTitle(fmt.Sprintf("Subscription: %s", MarkdownGenerateLink(*vnet.Subscription.DisplayName, "../Readme.md")), 4)
+	markdown += MarkdownGenerateTitle("Ranges", 4)
+	markdown += MarkdownGenerateListOfStringPointers(vnet.Properties.AddressSpace.AddressPrefixes)
+	markdown += MarkdownGenerateTitle("Subnets", 4)
+	markdown += MarkdownGenerateTableHeader("Prefix", "Name", "Route Table", "NSG")
 	for _, subnet := range vnet.Properties.Subnets {
-		markdown += fmt.Sprintf("| %s | %s | %s | %s |\n",
-			*subnet.Properties.AddressPrefix,
-			*subnet.Name,
-			getRouteTableName(subnet),
-			getNsgName(subnet))
+		markdown += MarkdownGenerateTableRow(*subnet.Properties.AddressPrefix, *subnet.Name, getRouteTableName(subnet), getNsgName(subnet))
 	}
-	markdown += fmt.Sprintf("### Free Space  \n")
-	markdown += fmt.Sprintf("| Prefix | Size (Usable) |\n")
-	markdown += fmt.Sprintf("| --- | --- |\n")
+	markdown += MarkdownGenerateTitle("Free Space", 3)
+	markdown += MarkdownGenerateTableHeader("Prefix", "Size (Usable)")
 	for _, space := range vnet.getFreeIPSPace() {
-		usableIPs := iplib.DeltaIP4(space.NetworkAddress(), iplib.IncrementIPBy(space.BroadcastAddress(), 1)) - 5
-		markdown += fmt.Sprintf("| %s | %d |\n",
-			space.String(), usableIPs,
-		)
+		usableIPs := iplib.DeltaIP4(space.NetworkAddress(), iplib.IncrementIPBy(space.BroadcastAddress(), 1)) - 5 // Azure reserves 5 IPs in any range
+		markdown += MarkdownGenerateTableRow(space.String(), fmt.Sprintf("%d", usableIPs))
 	}
-	markdown += fmt.Sprintf("### Peerings  \n")
-	markdown += fmt.Sprintf("| VNET | Spaces |\n")
-	markdown += fmt.Sprintf("| --- | --- |\n")
+	markdown += MarkdownGenerateTitle("Peerings", 3)
+	markdown += MarkdownGenerateTableHeader("VNET", "Spaces")
 	for _, peering := range vnet.Properties.VirtualNetworkPeerings {
 		nameParts := strings.Split(*peering.Properties.RemoteVirtualNetwork.ID, "/")
 		subscriptionId := nameParts[2]
@@ -100,19 +89,18 @@ func (vnet VNETWrapper) GenerateMarkdown() string {
 			remoteRanges = append(remoteRanges, *rrp)
 		}
 		vnetNameMarkdown := nameParts[8]
-		for _, subscription := range subscriptionList {
-			if *subscription.SubscriptionID == subscriptionId {
-				vnetNameMarkdown = strings.ReplaceAll(fmt.Sprintf("[%s](./../../%s/%s/%s.md)", nameParts[8], *subscription.DisplayName, nameParts[4], nameParts[8]), " ", "%20")
-				break
-			}
+		displayName, found := GetCachedSubscriptionNameByID(subscriptionId)
+		if found {
+			vnetNameMarkdown = MarkdownGenerateLink(nameParts[8], fmt.Sprintf("./../../%s/%s/%s.md", displayName, nameParts[4], nameParts[8]))
 		}
-		markdown += fmt.Sprintf("| %s | %v |\n", vnetNameMarkdown, remoteRanges)
+		markdown += MarkdownGenerateTableRow(vnetNameMarkdown, fmt.Sprintf("%s", remoteRanges))
 	}
+
 	return markdown
 }
 
-func (vnet VNETWrapper) WriteMarkdown() error {
-	markdown := vnet.GenerateMarkdown()
+func (vnet *VNETWrapper) WriteMarkdown() error {
+	markdown := vnet.MarkdownGenerate()
 	err := WriteToFile(markdown, fmt.Sprintf("docs/%s/%s/%s.md", *vnet.Subscription.DisplayName, vnet.ResourceGroup, *vnet.Name))
 	return err
 }
