@@ -6,3 +6,4 @@ config.yaml
 docs-azurerm*
 *.exe
 dist/
+*.png

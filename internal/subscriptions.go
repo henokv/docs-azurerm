@@ -46,6 +46,9 @@ func NewSubscriptionWrapper(sub armsubscription.Subscription) SubscriptionWrappe
 // subscriptionId : the resource id of the subscription
 // name : the display name
 // found : if the subscription can be found in cache
+/*
+GetCachedSubscriptionNameByID
+*/
 func GetCachedSubscriptionNameByID(subscriptionId string) (name string, found bool) {
 	for _, subscription := range subscriptionList {
 		if *subscription.SubscriptionID == subscriptionId {

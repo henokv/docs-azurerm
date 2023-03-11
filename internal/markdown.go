@@ -13,6 +13,13 @@ func MarkdownGenerateLink(title string, link string) string {
 	return fmt.Sprintf("[%s](%s)", title, strings.ReplaceAll(link, " ", "%20"))
 }
 
+func MarkdownGenerateImage(alt string, link string, title string) string {
+	if title != "" {
+		title = fmt.Sprintf(" \"%s\"", title)
+	}
+	return fmt.Sprintf("![%s!](%s%s)", alt, strings.ReplaceAll(link, " ", "%20"), title)
+}
+
 func MarkdownGenerateListOfStringPointers(items []*string) (listText string) {
 	for _, item := range items {
 		listText += MarkdownGenerateListItem(*item)
