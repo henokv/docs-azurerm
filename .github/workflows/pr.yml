@@ -4,6 +4,7 @@ on:
       - main
 env:
   GOPATH: ${{ github.workspace }}/go
+  GOPROXY: "https://proxy.golang.org,direct"
 
 jobs:
   go-test:
