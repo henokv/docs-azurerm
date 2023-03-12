@@ -29,15 +29,15 @@ func WriteToFile(content string, destination string) (err error) {
 	return nil
 }
 
-func coalesceString(value string, fallback string) string {
-	if len(value) == 0 {
-		return fallback
-	} else {
-		return ""
-	}
-}
+//func coalesceString(value string, fallback string) string {
+//	if len(value) == 0 {
+//		return fallback
+//	} else {
+//		return ""
+//	}
+//}
 
-func GenerateMarkdown(subs []*SubscriptionWrapper) string {
+func generateMarkdown(subs []*SubscriptionWrapper) string {
 	var markdown string
 	markdown += fmt.Sprintf("# Subscriptions  \n")
 	for _, sub := range subs {
@@ -49,7 +49,7 @@ func GenerateMarkdown(subs []*SubscriptionWrapper) string {
 }
 
 func WriteMarkdown(subs []*SubscriptionWrapper) error {
-	markdown := GenerateMarkdown(subs)
+	markdown := generateMarkdown(subs)
 	err := WriteToFile(markdown, fmt.Sprintf("docs/Readme.md"))
 	return err
 }

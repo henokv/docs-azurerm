@@ -14,11 +14,12 @@ var subscriptionList []*SubscriptionWrapper
 
 func (sub *SubscriptionWrapper) generateMarkdown() string {
 	var markdown string
-	markdown += fmt.Sprintf("# %s  \n", *sub.DisplayName)
-	markdown += fmt.Sprintf("#### ID: %s  \n", *sub.SubscriptionID)
+	markdown += MarkdownGenerateTitle(*sub.DisplayName, 1)
+	markdown += MarkdownGenerateTitle(fmt.Sprintf("ID: %s", *sub.SubscriptionID), 4)
 	markdown += fmt.Sprintf("#### VNETs  \n")
+	markdown += MarkdownGenerateTitle("VNETs", 4)
 	for _, vnet := range sub.vnets {
-		markdown += fmt.Sprintf("- [%s](%s/%s.md).  \n", *vnet.Name, vnet.ResourceGroup, *vnet.Name)
+		markdown += MarkdownGenerateListItem(MarkdownGenerateLink(*vnet.Name, fmt.Sprintf("%s/%s.md", vnet.ResourceGroup, *vnet.Name)))
 	}
 	return markdown
 }

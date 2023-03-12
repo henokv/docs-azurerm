@@ -20,12 +20,12 @@ func MarkdownGenerateListOfStringPointers(items []*string) (listText string) {
 	return listText
 }
 
-func MarkdownGenerateListOfPointers(items []*any) (listText string) {
-	for _, item := range items {
-		listText += MarkdownGenerateListItem(*item)
-	}
-	return listText
-}
+//func MarkdownGenerateListOfPointers(items []*any) (listText string) {
+//	for _, item := range items {
+//		listText += MarkdownGenerateListItem(*item)
+//	}
+//	return listText
+//}
 
 func MarkdownGenerateList(items []any) (listText string) {
 	for _, item := range items {
@@ -38,9 +38,9 @@ func MarkdownGenerateListItem(itemText any) string {
 	return fmt.Sprintf("- %s  \n", itemText)
 }
 
-func MarkdownGenerateTable(itemText any) string {
-	return fmt.Sprintf("- %s  \n", itemText)
-}
+//func MarkdownGenerateTable(itemText any) string {
+//	return fmt.Sprintf("- %s  \n", itemText)
+//}
 
 func MarkdownGenerateTableHeader(headers ...string) string {
 	markdown := MarkdownGenerateTableRow(headers...)
