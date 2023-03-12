@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-var client *DocumentationClient
+var clientSingleton *DocumentationClient
 
 type DocumentationClient struct {
 	*Markdown
@@ -21,8 +21,23 @@ type DocumentationClient struct {
 	docsDir       string
 }
 
-func NewDocumentationClient(docsDir string) (*DocumentationClient, error) {
-	client = &DocumentationClient{
+func GetSingletonDocumentationClient() (*DocumentationClient, error) {
+	if clientSingleton == nil {
+		docsDir := viper.GetString("docsDir")
+		if docsDir == "" {
+			docsDir = "docs"
+		}
+		var err error
+		clientSingleton, err = newDocumentationClient(docsDir)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return clientSingleton, nil
+}
+
+func newDocumentationClient(docsDir string) (*DocumentationClient, error) {
+	clientSingleton = &DocumentationClient{
 		Markdown: NewMarkdown(),
 		docsDir:  docsDir,
 	}
@@ -30,13 +45,13 @@ func NewDocumentationClient(docsDir string) (*DocumentationClient, error) {
 	if err != nil {
 		return nil, err
 	}
-	client.subscriptions = subscriptions
+	clientSingleton.subscriptions = subscriptions
 	vnets, err := GetWrappedVNETsInSubscriptions(subscriptions)
 	if err != nil {
 		return nil, err
 	}
-	client.vnets = vnets
-	return client, nil
+	clientSingleton.vnets = vnets
+	return clientSingleton, nil
 }
 
 func (client *DocumentationClient) GetSubscriptions() []*SubscriptionWrapper {

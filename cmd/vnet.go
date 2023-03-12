@@ -17,7 +17,7 @@ var vnetCmd = &cobra.Command{
 }
 
 func vnetCMDRun(cmd *cobra.Command, args []string) {
-	client, err := internal.NewDocumentationClient("docs")
+	client, err := internal.GetSingletonDocumentationClient()
 	cobra.CheckErr(err)
 	err = client.GenerateMarkdown(false)
 	cobra.CheckErr(err)

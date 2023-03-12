@@ -44,7 +44,7 @@ func TestGetFreeIPSPaceInVNETs(t *testing.T) {
 
 func TestWriteMarkdown(t *testing.T) {
 	var err error
-	client, err := NewDocumentationClient("docs")
+	client, err := GetSingletonDocumentationClient()
 	if err != nil {
 		t.Fatalf("Error creating documentation client: %s", err)
 	}

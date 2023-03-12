@@ -65,6 +65,10 @@ func (sub *SubscriptionWrapper) getWrappedVNETsInSubscription() (vnets []*VNETWr
 }
 
 func GetCachedSubscriptionNameByID(subscriptionId string) (name string, found bool) {
+	client, error := GetSingletonDocumentationClient()
+	if error != nil {
+		panic(error)
+	}
 	for _, subscription := range client.GetSubscriptions() {
 		if *subscription.SubscriptionID == subscriptionId {
 			name = *subscription.DisplayName
