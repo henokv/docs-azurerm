@@ -37,21 +37,25 @@ func GetSingletonDocumentationClient() (*DocumentationClient, error) {
 }
 
 func newDocumentationClient(docsDir string) (*DocumentationClient, error) {
-	clientSingleton = &DocumentationClient{
-		Markdown: NewMarkdown(),
-		docsDir:  docsDir,
-	}
 	subscriptions, err := getAllSubscriptions()
 	if err != nil {
 		return nil, err
 	}
-	clientSingleton.subscriptions = subscriptions
 	vnets, err := GetWrappedVNETsInSubscriptions(subscriptions)
 	if err != nil {
 		return nil, err
 	}
-	clientSingleton.vnets = vnets
+	clientSingleton = newDocumentationClientWithData(docsDir, subscriptions, vnets)
 	return clientSingleton, nil
+}
+func newDocumentationClientWithData(docsDir string, subscriptions []*SubscriptionWrapper, vnets []*VNETWrapper) *DocumentationClient {
+	client := &DocumentationClient{
+		Markdown:      NewMarkdown(),
+		docsDir:       docsDir,
+		subscriptions: subscriptions,
+		vnets:         vnets,
+	}
+	return client
 }
 
 func (client *DocumentationClient) GetSubscriptions() []*SubscriptionWrapper {
