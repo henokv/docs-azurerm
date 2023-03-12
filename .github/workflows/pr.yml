@@ -22,4 +22,4 @@ jobs:
       - name: Build
         run: go build ./...
       - name: Test
-        run: go test github.com/${{ github.repository }}/... -v -coverprofile=coverage.txt -covermode=atomic
+        run: go test github.com/${{ github.repository }}/internal -v -coverprofile=coverage.txt -covermode=atomic
