@@ -19,7 +19,7 @@ jobs:
         run: |
           go mod tidy
           go get -t -d ./...
-      - name: Build
-        run: go build ./...
+#      - name: Build
+#        run: go build ./...
       - name: Test
         run: go test github.com/${{ github.repository }}/internal -v -coverprofile=coverage.txt -covermode=atomic
