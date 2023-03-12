@@ -11,6 +11,7 @@ import (
 )
 
 type VNETWrapper struct {
+	*Markdown
 	*armnetwork.VirtualNetwork
 	ResourceGroup string
 	Subscription  SubscriptionWrapper
@@ -20,7 +21,7 @@ type VNETWrapper struct {
 func NewVNETWrapper(vnet *armnetwork.VirtualNetwork, subscriptionWrapper SubscriptionWrapper) VNETWrapper {
 	split := strings.Split(*vnet.ID, "/")
 	rg := split[4]
-	wrapper := VNETWrapper{vnet, rg, subscriptionWrapper, []*IPSpace{}}
+	wrapper := VNETWrapper{NewMarkdown(), vnet, rg, subscriptionWrapper, []*IPSpace{}}
 	sort.Slice(wrapper.Properties.AddressSpace.AddressPrefixes, func(i, j int) bool {
 		a := wrapper.Properties.AddressSpace.AddressPrefixes[i]
 		b := wrapper.Properties.AddressSpace.AddressPrefixes[j]
@@ -61,25 +62,25 @@ func (vnet *VNETWrapper) getFreeIPSPace() (freeSpaces []iplib.Net4) {
 
 func (vnet *VNETWrapper) MarkdownGenerate() string {
 	var markdown string
-	markdown += MarkdownGenerateTitle(*vnet.Name, 1)
-	markdown += MarkdownGenerateTitle(*vnet.Location, 4)
-	markdown += MarkdownGenerateTitle(vnet.ResourceGroup, 4)
-	markdown += MarkdownGenerateTitle(fmt.Sprintf("Subscription: %s", MarkdownGenerateLink(*vnet.Subscription.DisplayName, "../Readme.md")), 4)
-	markdown += MarkdownGenerateTitle("Ranges", 4)
-	markdown += MarkdownGenerateListOfStringPointers(vnet.Properties.AddressSpace.AddressPrefixes)
-	markdown += MarkdownGenerateTitle("Subnets", 4)
-	markdown += MarkdownGenerateTableHeader("Prefix", "Name", "Route Table", "NSG")
+	markdown += vnet.GenerateTitle(*vnet.Name, 1)
+	markdown += vnet.GenerateTitle(*vnet.Location, 4)
+	markdown += vnet.GenerateTitle(vnet.ResourceGroup, 4)
+	markdown += vnet.GenerateTitle(fmt.Sprintf("Subscription: %s", vnet.GenerateLink(*vnet.Subscription.DisplayName, "../Readme.md")), 4)
+	markdown += vnet.GenerateTitle("Ranges", 4)
+	markdown += vnet.GenerateListOfStringPointers(vnet.Properties.AddressSpace.AddressPrefixes)
+	markdown += vnet.GenerateTitle("Subnets", 4)
+	markdown += vnet.GenerateTableHeader("Prefix", "Name", "Route Table", "NSG")
 	for _, subnet := range vnet.Properties.Subnets {
-		markdown += MarkdownGenerateTableRow(*subnet.Properties.AddressPrefix, *subnet.Name, getRouteTableName(subnet), getNsgName(subnet))
+		markdown += vnet.GenerateTableRow(*subnet.Properties.AddressPrefix, *subnet.Name, vnet.getRouteTableName(subnet), vnet.getNsgName(subnet))
 	}
-	markdown += MarkdownGenerateTitle("Free Space", 3)
-	markdown += MarkdownGenerateTableHeader("Prefix", "Size (Usable)")
+	markdown += vnet.GenerateTitle("Free Space", 3)
+	markdown += vnet.GenerateTableHeader("Prefix", "Size (Usable)")
 	for _, space := range vnet.getFreeIPSPace() {
 		usableIPs := iplib.DeltaIP4(space.NetworkAddress(), iplib.IncrementIPBy(space.BroadcastAddress(), 1)) - 5 // Azure reserves 5 IPs in any range
-		markdown += MarkdownGenerateTableRow(space.String(), fmt.Sprintf("%d", usableIPs))
+		markdown += vnet.GenerateTableRow(space.String(), fmt.Sprintf("%d", usableIPs))
 	}
-	markdown += MarkdownGenerateTitle("Peerings", 3)
-	markdown += MarkdownGenerateTableHeader("VNET", "Spaces")
+	markdown += vnet.GenerateTitle("Peerings", 3)
+	markdown += vnet.GenerateTableHeader("VNET", "Spaces")
 	for _, peering := range vnet.Properties.VirtualNetworkPeerings {
 		nameParts := strings.Split(*peering.Properties.RemoteVirtualNetwork.ID, "/")
 		subscriptionId := nameParts[2]
@@ -91,9 +92,9 @@ func (vnet *VNETWrapper) MarkdownGenerate() string {
 		vnetNameMarkdown := nameParts[8]
 		displayName, found := GetCachedSubscriptionNameByID(subscriptionId)
 		if found {
-			vnetNameMarkdown = MarkdownGenerateLink(nameParts[8], fmt.Sprintf("./../../%s/%s/%s.md", displayName, nameParts[4], nameParts[8]))
+			vnetNameMarkdown = vnet.GenerateLink(nameParts[8], fmt.Sprintf("./../../%s/%s/%s.md", displayName, nameParts[4], nameParts[8]))
 		}
-		markdown += MarkdownGenerateTableRow(vnetNameMarkdown, fmt.Sprintf("%s", remoteRanges))
+		markdown += vnet.GenerateTableRow(vnetNameMarkdown, fmt.Sprintf("%s", remoteRanges))
 	}
 
 	return markdown
@@ -101,7 +102,7 @@ func (vnet *VNETWrapper) MarkdownGenerate() string {
 
 func (vnet *VNETWrapper) WriteMarkdown() error {
 	markdown := vnet.MarkdownGenerate()
-	err := WriteToFile(markdown, fmt.Sprintf("docs/%s/%s/%s.md", *vnet.Subscription.DisplayName, vnet.ResourceGroup, *vnet.Name))
+	err := vnet.writeToFile(markdown, fmt.Sprintf("docs/%s/%s/%s.md", *vnet.Subscription.DisplayName, vnet.ResourceGroup, *vnet.Name))
 	return err
 }
 
@@ -140,7 +141,7 @@ func getWrappedVNETsInSubscription(subscription *SubscriptionWrapper) (vnets []*
 	return vnets, nil
 }
 
-func getRouteTableName(subnet *armnetwork.Subnet) string {
+func (vnet *VNETWrapper) getRouteTableName(subnet *armnetwork.Subnet) string {
 	if subnet.Properties.RouteTable == nil {
 		return "-"
 	} else {
@@ -149,7 +150,7 @@ func getRouteTableName(subnet *armnetwork.Subnet) string {
 	}
 }
 
-func getNsgName(subnet *armnetwork.Subnet) string {
+func (vnet *VNETWrapper) getNsgName(subnet *armnetwork.Subnet) string {
 	if subnet.Properties.NetworkSecurityGroup == nil {
 		return "-"
 	} else {

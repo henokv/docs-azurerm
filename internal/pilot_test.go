@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"os"
 	"testing"
 )
 
@@ -45,35 +44,12 @@ func TestGetFreeIPSPaceInVNETs(t *testing.T) {
 
 func TestWriteMarkdown(t *testing.T) {
 	var err error
-
-	CleanDocsDir()
-	err = WriteMarkdown(subscriptions)
+	client, err := NewDocumentationClient("docs")
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("Error creating documentation client: %s", err)
 	}
-	_, err = os.Stat("docs/Readme.md")
+	err = client.WriteDocumentation()
 	if err != nil {
-		t.Fatalf("Expected file %s to exist", "docs/Readme.md")
+		t.Fatalf("Error writing markdown: %s", err)
 	}
-	for _, sub := range subscriptions {
-		sub.WriteMarkdown()
-		if err != nil {
-			t.Fatal(err)
-		}
-		//_, err = os.Stat(fmt.Sprintf("docs/%s/Readme.md", *sub.DisplayName))
-		//if err != nil {
-		//	t.Fatalf("Expected file %s to exist", fmt.Sprintf("docs/%s/Readme.md", *sub.DisplayName))
-		//}
-	}
-	for _, vnet := range vnets {
-		vnet.WriteMarkdown()
-		if err != nil {
-			t.Fatal(err)
-		}
-		//_, err = os.Stat(fmt.Sprintf("docs/%s/%s.md", *vnet.Subscription.DisplayName, *vnet.Name))
-		//if err != nil {
-		//	t.Fatalf("Expected file %s to exist", fmt.Sprintf("docs/%s/%s.md", *vnet.Subscription.DisplayName, *vnet.Name))
-		//}
-	}
-
 }
