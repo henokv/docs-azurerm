@@ -14,7 +14,7 @@ jobs:
       with:
         go-version: 1.20
     - run: |
-        ls -al GITHUB_WORKSPACE/go
+        ls -al $GITHUB_WORKSPACE/go
         echo $GOPATH
         go test -v ./...
       env:
