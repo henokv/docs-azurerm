@@ -1,9 +1,7 @@
 package internal
 
 import (
-	"context"
 	"fmt"
-	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v2"
 	"github.com/c-robinson/iplib"
 	"sort"
@@ -90,7 +88,7 @@ func (vnet *VNETWrapper) MarkdownGenerate() string {
 			remoteRanges = append(remoteRanges, *rrp)
 		}
 		vnetNameMarkdown := nameParts[8]
-		displayName, found := GetCachedSubscriptionNameByID(subscriptionId)
+		displayName, found := clientSingleton.GetSubscriptionNameByID(subscriptionId) //GetCachedSubscriptionNameByID(subscriptionId)
 		if found {
 			vnetNameMarkdown = vnet.GenerateLink(nameParts[8], fmt.Sprintf("./../../%s/%s/%s.md", displayName, nameParts[4], nameParts[8]))
 		}
@@ -108,7 +106,8 @@ func (vnet *VNETWrapper) WriteMarkdown() error {
 
 func GetWrappedVNETsInSubscriptions(subscriptions []*SubscriptionWrapper) (vnets []*VNETWrapper, err error) {
 	for _, subscription := range subscriptions {
-		vnetsInSub, err := getWrappedVNETsInSubscription(subscription)
+		vnetsInSub, err := subscription.GetWrappedVNETsInSubscription()
+		//vnetsInSub, err := getWrappedVNETsInSubscription(subscription)
 		if err != nil {
 			return vnets, err
 		}
@@ -117,29 +116,30 @@ func GetWrappedVNETsInSubscriptions(subscriptions []*SubscriptionWrapper) (vnets
 	return vnets, nil
 }
 
-func getWrappedVNETsInSubscription(subscription *SubscriptionWrapper) (vnets []*VNETWrapper, err error) {
-	cred, err := azidentity.NewDefaultAzureCredential(nil)
-	if err != nil {
-		return vnets, err
-	}
-	client, err := armnetwork.NewVirtualNetworksClient(*subscription.SubscriptionID, cred, nil)
-	if err != nil {
-		return vnets, err
-	}
-	pager := client.NewListAllPager(nil)
-	for pager.More() {
-		vnetList, err := pager.NextPage(context.Background())
-		if err != nil {
-			return vnets, err
-		}
-		for _, vnet := range vnetList.VirtualNetworkListResult.Value {
-			wrappedVNET := NewVNETWrapper(vnet, *subscription)
-			vnets = append(vnets, &wrappedVNET)
-			subscription.vnets = append(subscription.vnets, &wrappedVNET)
-		}
-	}
-	return vnets, nil
-}
+//
+//func getWrappedVNETsInSubscription(subscription *SubscriptionWrapper) (vnets []*VNETWrapper, err error) {
+//	cred, err := azidentity.NewDefaultAzureCredential(nil)
+//	if err != nil {
+//		return vnets, err
+//	}
+//	client, err := armnetwork.NewVirtualNetworksClient(*subscription.SubscriptionID, cred, nil)
+//	if err != nil {
+//		return vnets, err
+//	}
+//	pager := client.NewListAllPager(nil)
+//	for pager.More() {
+//		vnetList, err := pager.NextPage(context.Background())
+//		if err != nil {
+//			return vnets, err
+//		}
+//		for _, vnet := range vnetList.VirtualNetworkListResult.Value {
+//			wrappedVNET := NewVNETWrapper(vnet, *subscription)
+//			vnets = append(vnets, &wrappedVNET)
+//			subscription.vnets = append(subscription.vnets, &wrappedVNET)
+//		}
+//	}
+//	return vnets, nil
+//}
 
 func (vnet *VNETWrapper) getRouteTableName(subnet *armnetwork.Subnet) string {
 	if subnet.Properties.RouteTable == nil {

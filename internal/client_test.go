@@ -6,7 +6,7 @@ import (
 
 func TestGetCachedSubscriptionNameByID(t *testing.T) {
 	id := "00000000-0000-0000-0000-000000000000"
-	_, found := GetCachedSubscriptionNameByID(id)
+	_, found := clientSingleton.GetSubscriptionNameByID(id)
 	if found {
 		t.Fatalf("Subscription with id %s should not exist ", id)
 	}
@@ -48,7 +48,7 @@ func TestWriteMarkdown(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error creating documentation client: %s", err)
 	}
-	err = client.WriteDocumentation()
+	err = client.GenerateMarkdown(false)
 	if err != nil {
 		t.Fatalf("Error writing markdown: %s", err)
 	}

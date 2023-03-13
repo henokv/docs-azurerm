@@ -6,7 +6,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/subscription/armsubscription"
 )
 
-var mockClient *DocumentationClient
+// var mockClient *DocumentationClient
 var subscriptions []*SubscriptionWrapper
 var vnets []*VNETWrapper
 
@@ -74,9 +74,11 @@ func dummyVnets() []*VNETWrapper {
 }
 
 func init() {
+
 	if clientSingleton == nil {
 		subscriptions = dummySubscriptions()
 		vnets = dummyVnets()
+		subscriptions[0].vnets = append(subscriptions[0].vnets, vnets...)
 
 		clientSingleton = newDocumentationClientWithData("docs", subscriptions, vnets)
 	}

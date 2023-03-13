@@ -40,7 +40,7 @@ func NewSubscriptionWrapper(sub armsubscription.Subscription) SubscriptionWrappe
 	return SubscriptionWrapper{NewMarkdown(), &sub, []*VNETWrapper{}}
 }
 
-func (sub *SubscriptionWrapper) getWrappedVNETsInSubscription() (vnets []*VNETWrapper, err error) {
+func (sub *SubscriptionWrapper) GetWrappedVNETsInSubscription() (vnets []*VNETWrapper, err error) {
 	cred, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
 		return vnets, err
@@ -64,17 +64,17 @@ func (sub *SubscriptionWrapper) getWrappedVNETsInSubscription() (vnets []*VNETWr
 	return vnets, nil
 }
 
-func GetCachedSubscriptionNameByID(subscriptionId string) (name string, found bool) {
-	client, error := GetSingletonDocumentationClient()
-	if error != nil {
-		panic(error)
-	}
-	for _, subscription := range client.GetSubscriptions() {
-		if *subscription.SubscriptionID == subscriptionId {
-			name = *subscription.DisplayName
-			found = true
-			break
-		}
-	}
-	return name, found
-}
+//func GetCachedSubscriptionNameByID(subscriptionId string) (name string, found bool) {
+//	client, error := GetSingletonDocumentationClient()
+//	if error != nil {
+//		panic(error)
+//	}
+//	for _, subscription := range client.GetSubscriptions() {
+//		if *subscription.SubscriptionID == subscriptionId {
+//			name = *subscription.DisplayName
+//			found = true
+//			break
+//		}
+//	}
+//	return name, found
+//}
