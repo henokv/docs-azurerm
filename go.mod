@@ -10,7 +10,7 @@ require (
 	github.com/c-robinson/iplib v1.0.6
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.15.0
-	golang.org/x/exp v0.0.0-20230420155640-133eef4313cb
+	golang.org/x/exp v0.0.0-20230425010034-47ecfdc1ba53
 )
 
 require (
